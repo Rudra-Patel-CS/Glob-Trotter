@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { supabase, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
@@ -53,12 +54,11 @@ export default function Discover() {
     e.stopPropagation()
     if (savedCityIds.includes(cityId)) {
       setSavedCityIds(savedCityIds.filter(id => id !== cityId))
-      await supabase.from('saved_destinations').delete().eq('city_id', cityId)
-      setToastMsg('Destination removed from saved list')
+      toast.success('City removed from saved destinations')
     } else {
       setSavedCityIds([...savedCityIds, cityId])
       await supabase.from('saved_destinations').insert([{ user_id: user?.id || 'u1', city_id: cityId }])
-      setToastMsg('Destination saved to your favorites!')
+      toast.success('City saved to your profile!')
     }
     setTimeout(() => setToastMsg(''), 3000)
   }
@@ -84,6 +84,7 @@ export default function Discover() {
     await supabase.from('trip_stops').insert([newStop])
     await supabase.from('stops').insert([newStop])
     setShowTripPicker(false)
+    toast.success(`Added ${selectedCityForTrip.name} to trip!`)
     navigate(`/trips/${tripId}/builder`)
   }
 

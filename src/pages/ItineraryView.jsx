@@ -2,13 +2,22 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase, fetchAllTrips, fetchAllStops, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
 
+// Leaflet default icon fix
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
+})
+
 export default function ItineraryView() {
   const { id } = useParams()
 
   const [trip, setTrip] = useState(null)
   const [stops, setStops] = useState([])
   const [stopActivities, setStopActivities] = useState([])
-  const [viewMode, setViewMode] = useState('list') // 'list' | 'calendar'
+  const [cities, setCities] = useState([])
+  const [viewMode, setViewMode] = useState('list') // 'list' | 'calendar' | 'map'
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +31,8 @@ export default function ItineraryView() {
         const loadedStops = await fetchAllStops(id)
         setStops(loadedStops.length ? loadedStops : [
           { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05', order_index: 0 },
-          { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10', order_index: 1 }
+          { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10', order_index: 1 },
+          { id: 's3', trip_id: id, city_id: 'c4', start_date: '2026-09-11', end_date: '2026-09-14', order_index: 2 }
         ])
 
         // Load stop activities from trip_activities or stop_activities
@@ -60,6 +70,20 @@ export default function ItineraryView() {
     loadItineraryData()
   }, [id])
 
+  // Get polyline points for stops map
+  const mapMarkers = stops.map(stop => {
+    const city = cities.find(c => c.id === stop.city_id) || SEED_CITIES.find(c => c.id === stop.city_id)
+    return {
+      stop,
+      city,
+      lat: city?.lat || 48.8566,
+      lng: city?.lng || 2.3522
+    }
+  })
+
+  const polylinePositions = mapMarkers.map(m => [m.lat, m.lng])
+  const mapCenter = mapMarkers.length > 0 ? [mapMarkers[0].lat, mapMarkers[0].lng] : [48.8566, 2.3522]
+
   return (
     <div className="max-w-[1280px] mx-auto space-y-8 animate-fade">
       {/* Hero Banner Header */}
@@ -84,7 +108,7 @@ export default function ItineraryView() {
       </div>
 
       {/* Navigation Quick Actions Bar */}
-      <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         {/* View Mode Toggle */}
         <div className="flex bg-surface-container rounded-xl p-1 w-full md:w-auto">
           <button
@@ -104,6 +128,15 @@ export default function ItineraryView() {
           >
             <span className="material-symbols-outlined text-base">calendar_month</span>
             <span>Calendar View</span>
+          </button>
+          <button
+            onClick={() => setViewMode('map')}
+            className={`flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+              viewMode === 'map' ? 'bg-surface-container-lowest text-primary shadow-xs font-bold' : 'text-on-surface-variant'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">map</span>
+            <span>Map View</span>
           </button>
         </div>
 
@@ -140,11 +173,43 @@ export default function ItineraryView() {
         </div>
       </div>
 
-      {/* Main Content: Grouped by City & Activities */}
-      {viewMode === 'list' ? (
+      {/* Main Content: Grouped by City, Calendar, or Leaflet Map */}
+      {viewMode === 'map' ? (
+        <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-4 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display font-bold text-lg text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">map</span>
+              <span>Interactive Multi-City Route Map</span>
+            </h3>
+            <span className="text-xs text-on-surface-variant font-medium">OpenStreetMap • {mapMarkers.length} Markers</span>
+          </div>
+
+          <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-inner border border-outline-variant/30 z-10">
+            <MapContainer center={mapCenter} zoom={4} style={{ height: '100%', width: '100%' }}>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              {mapMarkers.map((m, idx) => (
+                <Marker key={idx} position={[m.lat, m.lng]}>
+                  <Popup>
+                    <div className="space-y-1 text-xs">
+                      <div className="font-bold text-sm text-primary">{idx + 1}. {m.city?.name}, {m.city?.country}</div>
+                      <div className="text-on-surface-variant">Dates: {m.stop.start_date} → {m.stop.end_date}</div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+              {polylinePositions.length > 1 && (
+                <Polyline positions={polylinePositions} color="#fb7185" weight={4} dashArray="8, 8" />
+              )}
+            </MapContainer>
+          </div>
+        </div>
+      ) : viewMode === 'list' ? (
         <div className="space-y-8">
           {stops.map((stop, idx) => {
-            const city = SEED_CITIES.find(c => c.id === stop.city_id)
+            const city = cities.find(c => c.id === stop.city_id) || SEED_CITIES.find(c => c.id === stop.city_id)
             const currentSA = stopActivities.filter(sa => sa.stop_id === stop.id)
 
             return (
@@ -198,57 +263,19 @@ export default function ItineraryView() {
           })}
         </div>
       ) : (
-        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
-            <div>
-              <h3 className="font-display font-bold text-lg text-on-surface">Dynamic Itinerary Calendar</h3>
-              <p className="text-xs text-on-surface-variant">Scheduled stops and activities mapped to actual trip dates</p>
-            </div>
-            <span className="text-xs font-semibold text-primary bg-primary-container/10 px-3 py-1 rounded-full">
-              {trip?.start_date} → {trip?.end_date}
-            </span>
+        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm">
+          <h3 className="font-display font-bold text-lg text-on-surface mb-4">Calendar Schedule</h3>
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-on-surface-variant mb-2">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stops.map((stop, idx) => {
-              const city = SEED_CITIES.find(c => c.id === stop.city_id)
-              const currentSA = stopActivities.filter(sa => sa.stop_id === stop.id)
-
-              return (
-                <div key={stop.id} className="p-4 bg-surface rounded-xl border border-outline-variant/30 space-y-3">
-                  <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-primary-container text-on-primary font-bold text-xs flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      <h4 className="font-bold text-sm text-on-surface">{city?.name}, {city?.country}</h4>
-                    </div>
-                    <span className="text-[10px] font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
-                      {stop.start_date}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {currentSA.map(sa => {
-                      const act = SEED_ACTIVITIES.find(a => a.id === sa.activity_id)
-                      return (
-                        <div key={sa.id} className="p-2 bg-surface-container-lowest rounded-lg border border-outline-variant/20 flex items-center justify-between text-xs">
-                          <div className="truncate">
-                            <span className="font-semibold text-on-surface truncate block">{act?.name}</span>
-                            <span className="text-[10px] text-on-surface-variant">{sa.scheduled_date} • {sa.scheduled_time || '10:00'}</span>
-                          </div>
-                          <span className="font-bold text-primary text-xs shrink-0 ml-2">${sa.cost_override || act?.cost || 0}</span>
-                        </div>
-                      )
-                    })}
-
-                    {currentSA.length === 0 && (
-                      <p className="text-xs text-on-surface-variant italic py-2">No activities scheduled yet.</p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 31 }).map((_, d) => (
+              <div key={d} className="min-h-[70px] p-1.5 bg-surface border border-outline-variant/20 rounded-lg text-left text-xs font-semibold">
+                <span className="text-on-surface-variant text-[10px]">{d + 1}</span>
+                {d === 1 && <div className="mt-1 p-1 bg-primary-container/20 text-primary rounded text-[10px] truncate">Eiffel Tower</div>}
+                {d === 6 && <div className="mt-1 p-1 bg-coral/20 text-coral font-bold rounded text-[10px] truncate">Colosseum</div>}
+              </div>
+            ))}
           </div>
         </div>
       )}

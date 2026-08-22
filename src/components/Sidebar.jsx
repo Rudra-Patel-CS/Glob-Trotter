@@ -6,6 +6,7 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
     { name: 'My Trips', path: '/trips', icon: 'explore' },
+    { name: 'AI Trip Generator', path: '/trips/ai-generate', icon: 'auto_awesome' },
     { name: 'Discover', path: '/discover', icon: 'map' },
     { name: 'Profile', path: '/profile', icon: 'person' },
     { name: 'Admin', path: '/admin', icon: 'admin_panel_settings' }

@@ -1,14 +1,18 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 import Sidebar from './components/Sidebar'
 import BottomNav from './components/BottomNav'
 import TopBar from './components/TopBar'
+import TravelAssistant from './components/TravelAssistant'
 
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MyTrips from './pages/MyTrips'
 import NewTripWizard from './pages/NewTripWizard'
+import AiTripGenerator from './pages/AiTripGenerator'
 import ItineraryBuilder from './pages/ItineraryBuilder'
 import ItineraryView from './pages/ItineraryView'
 import Discover from './pages/Discover'
@@ -37,11 +41,16 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// Layout wrapper for authenticated screens
+// Layout wrapper
 function AppLayout() {
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
+  const isLandingPage = location.pathname === '/'
   const isPublicShare = location.pathname.startsWith('/share/')
+
+  if (isLandingPage) {
+    return <Landing />
+  }
 
   if (isLoginPage) {
     return (
@@ -65,10 +74,10 @@ function AppLayout() {
       {/* Main Content Viewport */}
       <main className={`flex-1 ${isPublicShare ? 'w-full' : 'md:ml-[260px]'} pt-20 pb-24 md:pb-8 px-4 sm:px-6 min-h-screen overflow-x-hidden`}>
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
           <Route path="/trips/new" element={<ProtectedRoute><NewTripWizard /></ProtectedRoute>} />
+          <Route path="/trips/ai-generate" element={<ProtectedRoute><AiTripGenerator /></ProtectedRoute>} />
           <Route path="/trips/:id/builder" element={<ProtectedRoute><ItineraryBuilder /></ProtectedRoute>} />
           <Route path="/trips/:id" element={<ProtectedRoute><ItineraryView /></ProtectedRoute>} />
           <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
@@ -81,6 +90,9 @@ function AppLayout() {
         </Routes>
       </main>
 
+      {/* Floating AI Travel Assistant (renders on trip pages) */}
+      <TravelAssistant />
+
       {/* Fixed Bottom Tab Bar on Mobile */}
       {!isPublicShare && <BottomNav />}
     </div>
@@ -90,6 +102,7 @@ function AppLayout() {
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 3000, style: { background: '#151c27', color: '#fff', borderRadius: '12px', fontSize: '13px' } }} />
       <Router>
         <AppLayout />
       </Router>
