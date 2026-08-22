@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase, SEED_CITIES } from '../lib/supabase'
+import { supabase, fetchAllTrips, fetchAllStops, SEED_CITIES } from '../lib/supabase'
 import { CardSkeleton } from '../components/LoadingSkeleton'
 import EmptyState from '../components/EmptyState'
 
@@ -19,11 +19,11 @@ export default function MyTrips() {
     async function loadTripsData() {
       setLoading(true)
       try {
-        const { data: tripData } = await supabase.from('trips').select('*').order('start_date', { ascending: true })
-        if (tripData) setTrips(tripData)
+        const allTrips = await fetchAllTrips()
+        setTrips(allTrips)
 
-        const { data: stopData } = await supabase.from('stops').select('*')
-        if (stopData) setStops(stopData)
+        const allStops = await fetchAllStops()
+        setStops(allStops)
       } catch (err) {
         console.error('Error loading trips:', err)
       } finally {
@@ -36,6 +36,11 @@ export default function MyTrips() {
   const confirmDeleteTrip = async () => {
     if (!tripToDelete) return
     await supabase.from('trips').delete().eq('id', tripToDelete.id)
+
+    // Remove from local custom trips cache
+    const existingCustom = JSON.parse(localStorage.getItem('gt_custom_trips') || '[]')
+    localStorage.setItem('gt_custom_trips', JSON.stringify(existingCustom.filter(t => t.id !== tripToDelete.id)))
+
     setTrips(trips.filter(t => t.id !== tripToDelete.id))
     setTripToDelete(null)
   }
@@ -159,7 +164,7 @@ export default function MyTrips() {
                 {/* Photo & Status Badge */}
                 <div className="relative h-48 w-full overflow-hidden">
                   <img
-                    src={trip.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'}
+                    src={trip.cover_image || trip.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'}
                     alt={trip.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

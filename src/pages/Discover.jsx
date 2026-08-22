@@ -31,10 +31,17 @@ export default function Discover() {
   useEffect(() => {
     async function loadDiscoverData() {
       const { data: tripData } = await supabase.from('trips').select('*')
-      if (tripData) setUserTrips(tripData)
+      setUserTrips(tripData && tripData.length ? tripData : SEED_TRIPS)
 
-      const { data: stopData } = await supabase.from('stops').select('*')
-      if (stopData) setStops(stopData)
+      let loadedStops = []
+      const { data: tsData } = await supabase.from('trip_stops').select('*')
+      if (tsData && tsData.length) {
+        loadedStops = tsData.map(s => ({ ...s, start_date: s.arrival_date || s.start_date, end_date: s.departure_date || s.end_date }))
+      } else {
+        const { data: sData } = await supabase.from('stops').select('*')
+        loadedStops = (sData && sData.length) ? sData : SEED_STOPS
+      }
+      setStops(loadedStops)
 
       const { data: savedData } = await supabase.from('saved_destinations').select('city_id')
       if (savedData) setSavedCityIds(savedData.map(s => s.city_id))
@@ -67,10 +74,14 @@ export default function Discover() {
     const newStop = {
       trip_id: tripId,
       city_id: selectedCityForTrip.id,
+      arrival_date: '2026-09-01',
+      departure_date: '2026-09-05',
       start_date: '2026-09-01',
       end_date: '2026-09-05',
+      stop_order: 99,
       order_index: 99
     }
+    await supabase.from('trip_stops').insert([newStop])
     await supabase.from('stops').insert([newStop])
     setShowTripPicker(false)
     navigate(`/trips/${tripId}/builder`)
@@ -86,13 +97,16 @@ export default function Discover() {
     if (!selectedActivityForTrip) return
     const targetStop = stops.find(s => s.id === stopId)
     const newSA = {
-      id: 'sa_' + Date.now(),
+      trip_stop_id: stopId,
       stop_id: stopId,
       activity_id: selectedActivityForTrip.id,
-      scheduled_date: targetStop?.start_date || '2026-09-02',
+      activity_date: targetStop?.start_date || targetStop?.arrival_date || '2026-09-02',
+      scheduled_date: targetStop?.start_date || targetStop?.arrival_date || '2026-09-02',
+      start_time: '10:00',
       scheduled_time: '10:00',
-      cost_override: selectedActivityForTrip.cost
+      cost_override: selectedActivityForTrip.estimated_cost || selectedActivityForTrip.cost || 0
     }
+    await supabase.from('trip_activities').insert([newSA])
     await supabase.from('stop_activities').insert([newSA])
     setShowActivityPicker(false)
     setToastMsg(`Added "${selectedActivityForTrip.name}" to trip!`)

@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { supabase, SEED_EXPENSES } from '../lib/supabase'
+import { supabase, fetchAllTrips, fetchAllStops, SEED_EXPENSES } from '../lib/supabase'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { DetailsSkeleton } from '../components/LoadingSkeleton'
 
 export default function TripBudget() {
   const { id } = useParams()
 
   const [trip, setTrip] = useState(null)
   const [expenses, setExpenses] = useState([])
-  const [budgetLimit, setBudgetLimit] = useState(1800)
+  const [budgetLimit, setBudgetLimit] = useState(2500)
   const [loading, setLoading] = useState(true)
 
   // Add / Edit expense modal
@@ -24,24 +25,26 @@ export default function TripBudget() {
     async function loadBudget() {
       setLoading(true)
       try {
-        const { data: tripData } = await supabase.from('trips').select('*').eq('id', id).single()
-        setTrip(tripData || { id, name: 'Grand European Summer', currency: 'USD', start_date: '2026-09-01', end_date: '2026-09-14' })
+        const allTrips = await fetchAllTrips()
+        const foundTrip = allTrips.find(t => t.id === id)
+        setTrip(foundTrip || { id, name: 'Grand European Summer', currency: 'USD', start_date: '2026-09-01', end_date: '2026-09-14' })
 
         const { data: expData } = await supabase.from('expenses').select('*').eq('trip_id', id)
         setExpenses(expData && expData.length ? expData : SEED_EXPENSES.filter(e => e.trip_id === id))
 
-        const { data: stopData } = await supabase.from('stops').select('*').eq('trip_id', id)
-        const currentStops = stopData && stopData.length ? stopData : [
-          { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05' },
-          { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10' }
-        ]
+        const currentStops = await fetchAllStops(id)
         setStops(currentStops)
 
         const stopIds = currentStops.map(s => s.id)
-        const { data: saData } = await supabase.from('stop_activities').select('*')
-        if (saData) {
-          setStopActivities(saData.filter(sa => stopIds.includes(sa.stop_id)))
+        let saList = []
+        const { data: taData } = await supabase.from('trip_activities').select('*')
+        if (taData && taData.length) {
+          saList = taData.filter(sa => stopIds.includes(sa.trip_stop_id || sa.stop_id))
+        } else {
+          const { data: saData } = await supabase.from('stop_activities').select('*')
+          if (saData) saList = saData.filter(sa => stopIds.includes(sa.stop_id))
         }
+        setStopActivities(saList)
       } catch (err) {
         console.error('Error loading budget:', err)
       } finally {
@@ -55,14 +58,16 @@ export default function TripBudget() {
     e.preventDefault()
     if (!amount) return
     const newExp = {
-      id: 'e_' + Date.now(),
       trip_id: id,
       category,
       amount: Number(amount),
-      note
+      description: note || 'General expense',
+      note: note || 'General expense',
+      expense_date: new Date().toISOString().split('T')[0]
     }
-    await supabase.from('expenses').insert([newExp])
-    setExpenses([...expenses, newExp])
+    const { data: insertedExp } = await supabase.from('expenses').insert([newExp]).select()
+    const finalExp = (insertedExp && insertedExp.length) ? insertedExp[0] : { id: 'e_' + Date.now(), ...newExp }
+    setExpenses([...expenses, finalExp])
     setShowExpenseModal(false)
     setAmount('')
     setNote('')

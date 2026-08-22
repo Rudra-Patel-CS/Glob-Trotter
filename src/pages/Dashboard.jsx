@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAllTrips, SEED_CITIES, SEED_EXPENSES } from '../lib/supabase'
 import { CardSkeleton } from '../components/LoadingSkeleton'
 import EmptyState from '../components/EmptyState'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -19,17 +19,17 @@ export default function Dashboard() {
     async function fetchDashboardData() {
       setLoading(true)
       try {
-        // Fetch trips
-        const { data: tripData } = await supabase.from('trips').select('*').order('start_date', { ascending: true })
-        if (tripData) setTrips(tripData)
+        // Fetch trips using unified fetcher so newly created trips never disappear
+        const allTrips = await fetchAllTrips()
+        setTrips(allTrips)
 
         // Fetch cities
         const { data: cityData } = await supabase.from('cities').select('*').order('popularity', { ascending: false })
-        if (cityData) setCities(cityData)
+        setCities(cityData && cityData.length ? cityData : SEED_CITIES)
 
         // Fetch expenses
         const { data: expenseData } = await supabase.from('expenses').select('*')
-        if (expenseData) setExpenses(expenseData)
+        setExpenses(expenseData && expenseData.length ? expenseData : SEED_EXPENSES)
       } catch (err) {
         console.error('Error fetching dashboard data:', err)
       } finally {
@@ -121,7 +121,7 @@ export default function Dashboard() {
                 >
                   <div className="relative h-44 w-full overflow-hidden">
                     <img
-                      src={trip.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'}
+                      src={trip.cover_image || trip.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'}
                       alt={trip.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

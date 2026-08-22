@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { supabase, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
+import { supabase, fetchAllTrips, fetchAllStops, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
 
 export default function ItineraryView() {
   const { id } = useParams()
@@ -15,17 +15,38 @@ export default function ItineraryView() {
     async function loadItineraryData() {
       setLoading(true)
       try {
-        const { data: tripData } = await supabase.from('trips').select('*').eq('id', id).single()
-        setTrip(tripData || { id, name: 'Grand European Summer', start_date: '2026-09-01', end_date: '2026-09-14', description: 'Explore Paris, Rome & Barcelona', cover_photo_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80', is_public: true })
+        const allTrips = await fetchAllTrips()
+        const foundTrip = allTrips.find(t => t.id === id)
+        setTrip(foundTrip || { id, name: 'Grand European Summer', start_date: '2026-09-01', end_date: '2026-09-14', description: 'Explore Paris, Rome & Barcelona', cover_image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80', is_public: true })
 
-        const { data: stopData } = await supabase.from('stops').select('*').eq('trip_id', id).order('order_index', { ascending: true })
-        setStops(stopData && stopData.length ? stopData : [
+        const loadedStops = await fetchAllStops(id)
+        setStops(loadedStops.length ? loadedStops : [
           { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05', order_index: 0 },
           { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10', order_index: 1 }
         ])
 
-        const { data: saData } = await supabase.from('stop_activities').select('*')
-        setStopActivities(saData || [
+        // Load stop activities from trip_activities or stop_activities
+        let loadedSA = []
+        const { data: taData } = await supabase.from('trip_activities').select('*')
+        if (taData && taData.length) {
+          loadedSA = taData.map(sa => ({
+            ...sa,
+            stop_id: sa.trip_stop_id || sa.stop_id,
+            scheduled_date: sa.activity_date || sa.scheduled_date || '2026-09-02',
+            scheduled_time: sa.start_time || sa.scheduled_time || '10:00'
+          }))
+        } else {
+          const { data: saData } = await supabase.from('stop_activities').select('*')
+          if (saData && saData.length) {
+            loadedSA = saData.map(sa => ({
+              ...sa,
+              stop_id: sa.stop_id || sa.trip_stop_id,
+              scheduled_date: sa.scheduled_date || sa.activity_date || '2026-09-02',
+              scheduled_time: sa.scheduled_time || sa.start_time || '10:00'
+            }))
+          }
+        }
+        setStopActivities(loadedSA.length ? loadedSA : [
           { id: 'sa1', stop_id: 's1', activity_id: 'a1', scheduled_date: '2026-09-02', scheduled_time: '10:00', cost_override: 35 },
           { id: 'sa2', stop_id: 's1', activity_id: 'a2', scheduled_date: '2026-09-03', scheduled_time: '14:00', cost_override: 65 },
           { id: 'sa4', stop_id: 's2', activity_id: 'a6', scheduled_date: '2026-09-07', scheduled_time: '09:00', cost_override: 50 }
@@ -44,7 +65,7 @@ export default function ItineraryView() {
       {/* Hero Banner Header */}
       <div className="relative h-64 sm:h-80 rounded-3xl overflow-hidden shadow-lg border border-outline-variant/30">
         <img
-          src={trip?.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80'}
+          src={trip?.cover_image || trip?.cover_photo_url || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80'}
           alt={trip?.name}
           className="w-full h-full object-cover"
         />

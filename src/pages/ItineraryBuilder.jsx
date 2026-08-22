@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { supabase, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
+import { useParams, Link } from 'react-router-dom'
+import { supabase, fetchAllTrips, fetchAllStops, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
+import { DetailsSkeleton } from '../components/LoadingSkeleton'
 
 export default function ItineraryBuilder() {
   const { id } = useParams()
-  const navigate = useNavigate()
-
   const [trip, setTrip] = useState(null)
   const [stops, setStops] = useState([])
-  const [selectedStopId, setSelectedStopId] = useState(null)
-  const [stopActivities, setStopActivities] = useState([])
-  const [activitiesList, setActivitiesList] = useState([])
   const [cities, setCities] = useState([])
+  const [activitiesList, setActivitiesList] = useState([])
+  const [stopActivities, setStopActivities] = useState([])
+  const [selectedStopId, setSelectedStopId] = useState(null)
   const [loading, setLoading] = useState(true)
-
-  // Modals / Drawers state
   const [showAddStopModal, setShowAddStopModal] = useState(false)
   const [showAddActivityDrawer, setShowAddActivityDrawer] = useState(false)
   const [activityCategoryFilter, setActivityCategoryFilter] = useState('all')
@@ -23,23 +20,21 @@ export default function ItineraryBuilder() {
     async function loadBuilderData() {
       setLoading(true)
       try {
-        // Load trip
-        const { data: tripData } = await supabase.from('trips').select('*').eq('id', id).single()
-        if (tripData) setTrip(tripData)
-        else {
-          setTrip({ id, name: 'Grand European Summer', currency: 'USD', start_date: '2026-09-01', end_date: '2026-09-14' })
-        }
+        // Load trip using unified fetcher
+        const allTrips = await fetchAllTrips()
+        const foundTrip = allTrips.find(t => t.id === id)
+        setTrip(foundTrip || { id, name: 'Grand European Summer', currency: 'USD', start_date: '2026-09-01', end_date: '2026-09-14' })
 
-        // Load stops
-        const { data: stopData } = await supabase.from('stops').select('*').eq('trip_id', id).order('order_index', { ascending: true })
-        if (stopData && stopData.length) {
-          setStops(stopData)
-          setSelectedStopId(stopData[0].id)
+        // Load stops using unified fetcher
+        const loadedStops = await fetchAllStops(id)
+
+        if (loadedStops.length) {
+          setStops(loadedStops)
+          setSelectedStopId(loadedStops[0].id)
         } else {
-          // Default stops
           const defaultStops = [
-            { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05', order_index: 0 },
-            { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10', order_index: 1 }
+            { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05', arrival_date: '2026-09-01', departure_date: '2026-09-05', order_index: 0, stop_order: 0 },
+            { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10', arrival_date: '2026-09-06', departure_date: '2026-09-10', order_index: 1, stop_order: 1 }
           ]
           setStops(defaultStops)
           setSelectedStopId('s1')
@@ -51,11 +46,36 @@ export default function ItineraryBuilder() {
 
         // Load activities
         const { data: actData } = await supabase.from('activities').select('*')
-        setActivitiesList(actData && actData.length ? actData : SEED_ACTIVITIES)
+        const normalizedActs = (actData && actData.length ? actData : SEED_ACTIVITIES).map(a => ({
+          ...a,
+          cost: a.estimated_cost ?? a.cost ?? 0,
+          category: a.activity_type || a.category || 'activity'
+        }))
+        setActivitiesList(normalizedActs)
 
-        // Load stop activities
-        const { data: saData } = await supabase.from('stop_activities').select('*')
-        setStopActivities(saData || [])
+        // Load stop activities from trip_activities (primary DB) or stop_activities
+        let loadedSA = []
+        const { data: taData } = await supabase.from('trip_activities').select('*')
+        if (taData && taData.length) {
+          loadedSA = taData.map(sa => ({
+            ...sa,
+            stop_id: sa.trip_stop_id || sa.stop_id,
+            scheduled_date: sa.activity_date || sa.scheduled_date || '2026-09-02',
+            scheduled_time: sa.start_time || sa.scheduled_time || '10:00',
+            cost_override: sa.cost_override ?? 0
+          }))
+        } else {
+          const { data: saData } = await supabase.from('stop_activities').select('*')
+          if (saData && saData.length) {
+            loadedSA = saData.map(sa => ({
+              ...sa,
+              stop_id: sa.stop_id || sa.trip_stop_id,
+              scheduled_date: sa.scheduled_date || sa.activity_date || '2026-09-02',
+              scheduled_time: sa.scheduled_time || sa.start_time || '10:00'
+            }))
+          }
+        }
+        setStopActivities(loadedSA)
       } catch (err) {
         console.error('Error loading builder:', err)
       } finally {
@@ -75,22 +95,25 @@ export default function ItineraryBuilder() {
   // Calculate total running cost
   const totalCost = stopActivities.reduce((sum, sa) => {
     const act = activitiesList.find(a => a.id === sa.activity_id)
-    return sum + Number(sa.cost_override !== undefined ? sa.cost_override : (act?.cost || 0))
+    return sum + Number(sa.cost_override !== undefined ? sa.cost_override : (act?.cost || act?.estimated_cost || 0))
   }, 0)
 
-  // Add stop
+  // Add stop to trip
   const handleAddStopToTrip = async (city) => {
     const newStop = {
-      id: 's_' + Date.now(),
       trip_id: id,
       city_id: city.id,
+      arrival_date: trip?.start_date || '2026-09-01',
+      departure_date: trip?.end_date || '2026-09-05',
       start_date: trip?.start_date || '2026-09-01',
       end_date: trip?.end_date || '2026-09-05',
+      stop_order: stops.length,
       order_index: stops.length
     }
-    await supabase.from('stops').insert([newStop])
-    setStops([...stops, newStop])
-    setSelectedStopId(newStop.id)
+    const { data: insertedStop } = await supabase.from('trip_stops').insert([newStop]).select()
+    const finalStop = (insertedStop && insertedStop.length) ? insertedStop[0] : { id: 's_' + Date.now(), ...newStop }
+    setStops([...stops, finalStop])
+    setSelectedStopId(finalStop.id)
     setShowAddStopModal(false)
   }
 
@@ -98,19 +121,23 @@ export default function ItineraryBuilder() {
   const handleAddActivityToStop = async (activity) => {
     if (!selectedStopId) return
     const newSA = {
-      id: 'sa_' + Date.now(),
+      trip_stop_id: selectedStopId,
       stop_id: selectedStopId,
       activity_id: activity.id,
+      activity_date: activeStop?.start_date || '2026-09-02',
       scheduled_date: activeStop?.start_date || '2026-09-02',
+      start_time: '10:00',
       scheduled_time: '10:00',
-      cost_override: activity.cost
+      cost_override: activity.estimated_cost || activity.cost || 0
     }
-    await supabase.from('stop_activities').insert([newSA])
-    setStopActivities([...stopActivities, newSA])
+    const { data: insertedSA } = await supabase.from('trip_activities').insert([newSA]).select()
+    const finalSA = (insertedSA && insertedSA.length) ? insertedSA[0] : { id: 'sa_' + Date.now(), ...newSA }
+    setStopActivities([...stopActivities, finalSA])
   }
 
   // Remove activity from stop
   const handleRemoveActivityFromStop = async (saId) => {
+    await supabase.from('trip_activities').delete().eq('id', saId)
     await supabase.from('stop_activities').delete().eq('id', saId)
     setStopActivities(stopActivities.filter(sa => sa.id !== saId))
   }
@@ -123,7 +150,10 @@ export default function ItineraryBuilder() {
     const temp = newStops[idx]
     newStops[idx] = newStops[targetIdx]
     newStops[targetIdx] = temp
-    newStops.forEach((s, i) => s.order_index = i)
+    newStops.forEach((s, i) => {
+      s.order_index = i
+      s.stop_order = i
+    })
     setStops(newStops)
   }
 

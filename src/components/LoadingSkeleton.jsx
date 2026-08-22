@@ -31,3 +31,16 @@ export function HorizontalSkeleton({ count = 3 }) {
     </div>
   )
 }
+
+export function DetailsSkeleton() {
+  return (
+    <div className="max-w-[1280px] mx-auto space-y-6 animate-pulse">
+      <div className="h-64 bg-surface-container-high rounded-3xl" />
+      <div className="h-12 bg-surface-container rounded-xl w-1/3" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="h-48 bg-surface-container rounded-2xl md:col-span-2" />
+        <div className="h-48 bg-surface-container rounded-2xl" />
+      </div>
+    </div>
+  )
+}
