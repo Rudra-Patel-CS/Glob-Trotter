@@ -158,7 +158,10 @@ Respond strictly with a VALID JSON object matching this structure (no markdown f
   const handleUseThisPlan = async () => {
     if (!generatedPlan) return
     try {
+      const tripId = 't_ai_' + Date.now()
       const newTrip = {
+        id: tripId,
+        user_id: 'u1',
         name: generatedPlan.trip_name || 'AI Generated Trip',
         start_date: '2026-09-01',
         end_date: `2026-09-0${Math.min(days, 9)}`,
@@ -168,13 +171,16 @@ Respond strictly with a VALID JSON object matching this structure (no markdown f
         interests: selectedInterests
       }
 
-      const { data: tripData } = await supabase.from('trips').insert([newTrip])
-      const createdTrip = Array.isArray(tripData) ? tripData[0] : newTrip
-      const tripId = createdTrip?.id || 't_ai_' + Date.now()
+      await supabase.from('trips').insert([newTrip]).select()
+
+      const existingTrips = JSON.parse(localStorage.getItem('gt_trips') || '[]')
+      localStorage.setItem('gt_trips', JSON.stringify([newTrip, ...existingTrips]))
 
       // Create stops
+      const createdStops = []
       for (let i = 0; i < selectedCityIds.length; i++) {
         const stop = {
+          id: 's_ai_' + Date.now() + '_' + i,
           trip_id: tripId,
           city_id: selectedCityIds[i],
           start_date: '2026-09-01',
@@ -182,7 +188,11 @@ Respond strictly with a VALID JSON object matching this structure (no markdown f
           order_index: i
         }
         await supabase.from('stops').insert([stop])
+        createdStops.push(stop)
       }
+
+      const existingStops = JSON.parse(localStorage.getItem('gt_stops') || '[]')
+      localStorage.setItem('gt_stops', JSON.stringify([...createdStops, ...existingStops]))
 
       toast.success('AI Trip saved to your account!')
       navigate(`/trips/${tripId}`)

@@ -1,19 +1,101 @@
 import { useState, useEffect } from 'react'
-import { supabase, SEED_TRIPS, SEED_CITIES } from '../lib/supabase'
+import { supabase, SEED_TRIPS } from '../lib/supabase'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { toast } from 'react-hot-toast'
 
 export default function Admin() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem('gt_admin_auth') === 'true'
+  })
+  const [passwordInput, setPasswordInput] = useState('')
+  const [authError, setAuthError] = useState('')
+
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const adminPasscode = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
+
   useEffect(() => {
+    if (!isAuthenticated) return
     async function loadAdminData() {
       const { data } = await supabase.from('trips').select('*')
-      setTrips(data && data.length ? data : SEED_TRIPS)
+      const localTrips = JSON.parse(localStorage.getItem('gt_trips') || '[]')
+      const combined = [...(data || []), ...localTrips]
+      
+      // Deduplicate by ID
+      const uniqueMap = new Map()
+      combined.forEach(t => uniqueMap.set(t.id, t))
+      const allTrips = Array.from(uniqueMap.values())
+
+      setTrips(allTrips.length ? allTrips : SEED_TRIPS)
       setLoading(false)
     }
     loadAdminData()
-  }, [])
+  }, [isAuthenticated])
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    if (passwordInput === adminPasscode) {
+      setIsAuthenticated(true)
+      sessionStorage.setItem('gt_admin_auth', 'true')
+      setAuthError('')
+      toast.success('Admin authentication successful!')
+    } else {
+      setAuthError('Invalid admin password. Please try again.')
+      toast.error('Invalid admin password')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    sessionStorage.removeItem('gt_admin_auth')
+    setPasswordInput('')
+    toast.success('Logged out of Admin Portal')
+  }
+
+  // Password Lock Screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto my-12 p-8 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-lg space-y-6 animate-fade">
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 bg-coral/10 text-coral rounded-2xl flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
+          </div>
+          <h2 className="font-display font-bold text-2xl text-on-surface">Admin Access Portal</h2>
+          <p className="text-xs text-on-surface-variant">Enter the administrator password to view system analytics</p>
+        </div>
+
+        {authError && (
+          <div className="p-3 bg-error-container text-on-error-container text-xs rounded-xl flex items-center gap-2 font-medium">
+            <span className="material-symbols-outlined text-base text-error">error</span>
+            <span>{authError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-on-surface mb-1.5">Admin Password</label>
+            <input
+              type="password"
+              required
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Enter passcode..."
+              className="w-full px-4 py-2.5 text-xs bg-surface border border-outline-variant/60 rounded-xl text-on-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-coral hover:bg-coral-hover text-white font-semibold text-xs py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">lock_open</span>
+            <span>Authenticate Admin</span>
+          </button>
+        </form>
+      </div>
+    )
+  }
 
   const topCitiesData = [
     { city: 'Paris', bookings: 42 },
@@ -33,14 +115,24 @@ export default function Admin() {
   return (
     <div className="max-w-[1280px] mx-auto space-y-8 animate-fade">
       {/* Header */}
-      <div>
-        <div className="inline-block px-3 py-1 bg-coral/10 text-coral font-bold text-[11px] rounded-full uppercase tracking-wider mb-1">
-          Role-Gated Management
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="inline-block px-3 py-1 bg-coral/10 text-coral font-bold text-[11px] rounded-full uppercase tracking-wider mb-1">
+            Authenticated Admin Portal
+          </div>
+          <h1 className="font-display font-bold text-3xl text-on-surface tracking-tight">Admin & System Analytics</h1>
+          <p className="font-sans text-sm text-on-surface-variant">
+            Platform performance indicators, destination trends & recent activity
+          </p>
         </div>
-        <h1 className="font-display font-bold text-3xl text-on-surface tracking-tight">Admin & System Analytics</h1>
-        <p className="font-sans text-sm text-on-surface-variant">
-          Platform performance indicators, destination trends & recent activity
-        </p>
+
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-xl text-xs font-semibold text-on-surface flex items-center gap-1.5 transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">lock</span>
+          <span>Lock Admin</span>
+        </button>
       </div>
 
       {/* KPI Cards Row */}
@@ -62,7 +154,7 @@ export default function Admin() {
           </div>
           <div>
             <div className="text-xs text-on-surface-variant font-semibold">Total Trips Created</div>
-            <div className="font-display font-bold text-2xl text-on-surface">3,890</div>
+            <div className="font-display font-bold text-2xl text-on-surface">{trips.length + 3880}</div>
             <div className="text-[10px] text-coral font-bold">↑ 18% this month</div>
           </div>
         </div>
@@ -127,7 +219,7 @@ export default function Admin() {
 
       {/* Recent Trips Table */}
       <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs space-y-4">
-        <h3 className="font-display font-bold text-base text-on-surface">Recent System Trips</h3>
+        <h3 className="font-display font-bold text-base text-on-surface">Recent System Trips ({trips.length})</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-on-surface border-collapse">
             <thead>

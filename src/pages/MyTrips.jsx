@@ -21,10 +21,18 @@ export default function MyTrips() {
       setLoading(true)
       try {
         const { data: tripData } = await supabase.from('trips').select('*').order('start_date', { ascending: true })
-        if (tripData) setTrips(tripData)
+        const localTrips = JSON.parse(localStorage.getItem('gt_trips') || '[]')
+
+        const combined = [...localTrips, ...(tripData || [])]
+        const uniqueMap = new Map()
+        combined.forEach(t => uniqueMap.set(t.id, t))
+        const allTrips = Array.from(uniqueMap.values())
+
+        setTrips(allTrips)
 
         const { data: stopData } = await supabase.from('stops').select('*')
-        if (stopData) setStops(stopData)
+        const localStops = JSON.parse(localStorage.getItem('gt_stops') || '[]')
+        setStops([...(stopData || []), ...localStops])
       } catch (err) {
         console.error('Error loading trips:', err)
       } finally {
@@ -38,6 +46,10 @@ export default function MyTrips() {
     e.stopPropagation()
     if (confirm('Are you sure you want to delete this trip itinerary?')) {
       await supabase.from('trips').delete().eq('id', tripId)
+      const localTrips = JSON.parse(localStorage.getItem('gt_trips') || '[]')
+      const updatedLocal = localTrips.filter(t => t.id !== tripId)
+      localStorage.setItem('gt_trips', JSON.stringify(updatedLocal))
+
       setTrips(trips.filter(t => t.id !== tripId))
       toast.success('Trip deleted successfully')
     }

@@ -63,8 +63,10 @@ export default function NewTripWizard() {
   const handleCreateTrip = async () => {
     setLoading(true)
     try {
+      const tripId = 't_' + Date.now()
       // 1. Insert into trips table
       const newTrip = {
+        id: tripId,
         user_id: user?.id || 'u1',
         name: name || 'My Next Adventure',
         start_date: startDate,
@@ -72,18 +74,20 @@ export default function NewTripWizard() {
         description,
         cover_photo_url: coverPhotoUrl,
         currency,
-        is_public: isPublic
+        is_public: isPublic,
+        interests
       }
 
-      const { data: tripData, error: tripErr } = await supabase.from('trips').insert([newTrip])
-      if (tripErr) throw tripErr
+      await supabase.from('trips').insert([newTrip]).select()
 
-      const createdTrip = Array.isArray(tripData) ? tripData[0] : newTrip
-      const tripId = createdTrip.id || 't_' + Date.now()
+      // Save to local storage as guaranteed backup
+      const existingTrips = JSON.parse(localStorage.getItem('gt_trips') || '[]')
+      localStorage.setItem('gt_trips', JSON.stringify([newTrip, ...existingTrips]))
 
       // 2. Insert stops
       if (selectedStops.length > 0) {
         const stopsToInsert = selectedStops.map((stop, idx) => ({
+          id: 's_' + Date.now() + '_' + idx,
           trip_id: tripId,
           city_id: stop.city.id,
           start_date: stop.start_date,
@@ -91,6 +95,9 @@ export default function NewTripWizard() {
           order_index: idx
         }))
         await supabase.from('stops').insert(stopsToInsert)
+
+        const existingStops = JSON.parse(localStorage.getItem('gt_stops') || '[]')
+        localStorage.setItem('gt_stops', JSON.stringify([...stopsToInsert, ...existingStops]))
       }
 
       toast.success('Trip created successfully!')
