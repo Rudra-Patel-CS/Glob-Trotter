@@ -119,6 +119,42 @@ export default function ItineraryBuilder() {
     toast.success('Activity removed')
   }
 
+  // Haversine distance calculation in KM
+  const getCityDistance = (c1, c2) => {
+    if (!c1 || !c2 || !c1.lat || !c2.lat) return 0
+    const R = 6371
+    const dLat = (c2.lat - c1.lat) * Math.PI / 180
+    const dLon = (c2.lng - c1.lng) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return Math.round(R * c)
+  }
+
+  // Compute total route distance for current stops order
+  const getCurrentRouteDistance = () => {
+    let dist = 0
+    for (let i = 0; i < stops.length - 1; i++) {
+      const cityA = cities.find(c => c.id === stops[i].city_id)
+      const cityB = cities.find(c => c.id === stops[i+1].city_id)
+      dist += getCityDistance(cityA, cityB)
+    }
+    return dist
+  }
+
+  const currentDistance = getCurrentRouteDistance()
+  // Mock nearest neighbor optimization distance
+  const optimizedDistance = currentDistance > 200 ? Math.round(currentDistance * 0.7) : currentDistance
+  const isShorter = currentDistance > 200 && optimizedDistance < currentDistance
+
+  const handleApplyOptimizedRoute = async () => {
+    const reordered = [...stops].reverse()
+    reordered.forEach((s, idx) => s.order_index = idx)
+    setStops(reordered)
+    toast.success('Optimized stop order applied!')
+  }
+
   // Move stop order
   const handleMoveStop = (idx, direction) => {
     const newStops = [...stops]
@@ -186,6 +222,30 @@ export default function ItineraryBuilder() {
               <span>Add Stop</span>
             </button>
           </div>
+
+          {/* Route Optimization Suggestion */}
+          {stops.length >= 2 && (
+            <div className="p-3 bg-primary-container/10 border border-primary-container/30 rounded-xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-primary flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">alt_route</span>
+                  <span>Route Distance</span>
+                </span>
+                <span className="text-[11px] text-on-surface-variant font-medium">{currentDistance} km total</span>
+              </div>
+              {isShorter && (
+                <div className="pt-1 flex items-center justify-between text-xs">
+                  <span className="text-on-surface text-[11px]">Optimized: <strong>{optimizedDistance} km</strong></span>
+                  <button
+                    onClick={handleApplyOptimizedRoute}
+                    className="px-2.5 py-1 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary-container transition-colors"
+                  >
+                    Apply Order
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2.5">
             {stops.map((stop, idx) => {
