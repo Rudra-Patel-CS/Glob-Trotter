@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { supabase, SEED_EXPENSES } from '../lib/supabase'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
@@ -66,11 +67,13 @@ export default function TripBudget() {
     setShowExpenseModal(false)
     setAmount('')
     setNote('')
+    toast.success('Expense item saved!')
   }
 
   const handleDeleteExpense = async (expId) => {
     await supabase.from('expenses').delete().eq('id', expId)
     setExpenses(expenses.filter(e => e.id !== expId))
+    toast.success('Expense deleted')
   }
 
   // Combine line-item expenses & stop activities for total cost calculation

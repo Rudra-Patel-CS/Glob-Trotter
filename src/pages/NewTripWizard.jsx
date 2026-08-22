@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { supabase, SEED_CITIES } from '../lib/supabase'
 
@@ -88,9 +89,14 @@ export default function NewTripWizard() {
         await supabase.from('stops').insert(stopsToInsert)
       }
 
+      toast.success('Trip created successfully!')
       navigate(`/trips/${tripId}/builder`)
     } catch (err) {
       console.error('Error creating trip:', err)
+<<<<<<< HEAD
+=======
+      toast.success('Trip created successfully!')
+>>>>>>> a7ed858 (Edit the UI)
       navigate('/trips')
     } finally {
       setLoading(false)

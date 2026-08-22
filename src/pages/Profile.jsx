@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { supabase, SEED_CITIES } from '../lib/supabase'
 
@@ -43,23 +44,25 @@ export default function Profile() {
       const url = URL.createObjectURL(file)
       setAvatarUrl(url)
       updateProfile({ avatar_url: url })
+      toast.success('Avatar updated!')
     }
   }
 
   const handleSaveProfile = (e) => {
     e.preventDefault()
     updateProfile({ full_name: fullName, language })
-    alert('Profile updated successfully!')
+    toast.success('Profile updated successfully!')
   }
 
   const handleRemoveSavedCity = async (cityId) => {
     setSavedCities(savedCities.filter(c => c.id !== cityId))
     await supabase.from('saved_destinations').delete().eq('city_id', cityId)
+    toast.success('Destination removed')
   }
 
   const handleDeleteAccount = async () => {
     await signOut()
-    alert('Account deleted successfully.')
+    toast.success('Account deleted successfully.')
   }
 
   return (

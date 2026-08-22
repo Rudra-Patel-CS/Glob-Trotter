@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { supabase, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
 
 export default function PublicShare() {
@@ -42,13 +43,14 @@ export default function PublicShare() {
       is_public: false
     }
     const { data } = await supabase.from('trips').insert([newTrip])
-    alert('Trip duplicated successfully into your account!')
+    toast.success('Trip duplicated successfully into your account!')
     navigate('/trips')
   }
 
   const handleCopyShareLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
+    toast.success('Share link copied to clipboard!')
     setTimeout(() => setCopied(false), 3000)
   }
 

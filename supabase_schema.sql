@@ -19,6 +19,7 @@ create table if not exists trips (
   cover_photo_url text,
   currency text default 'USD',
   is_public boolean default false,
+  interests text[],
   created_at timestamptz default now()
 );
 
@@ -28,7 +29,9 @@ create table if not exists cities (
   country text not null,
   cost_index numeric default 2,
   popularity int default 85,
-  image_url text
+  image_url text,
+  latitude numeric,
+  longitude numeric
 );
 
 create table if not exists stops (

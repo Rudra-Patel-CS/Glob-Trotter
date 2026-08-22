@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { supabase, SEED_CITIES, SEED_ACTIVITIES } from '../lib/supabase'
 
 export default function ItineraryBuilder() {
@@ -92,6 +93,7 @@ export default function ItineraryBuilder() {
     setStops([...stops, newStop])
     setSelectedStopId(newStop.id)
     setShowAddStopModal(false)
+    toast.success(`Stop ${city.name} added!`)
   }
 
   // Add activity to current stop
@@ -107,12 +109,14 @@ export default function ItineraryBuilder() {
     }
     await supabase.from('stop_activities').insert([newSA])
     setStopActivities([...stopActivities, newSA])
+    toast.success(`Activity "${activity.name}" added!`)
   }
 
   // Remove activity from stop
   const handleRemoveActivityFromStop = async (saId) => {
     await supabase.from('stop_activities').delete().eq('id', saId)
     setStopActivities(stopActivities.filter(sa => sa.id !== saId))
+    toast.success('Activity removed')
   }
 
   // Move stop order

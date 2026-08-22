@@ -5,21 +5,21 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Initial Seed Data for fallback local storage mode
 export const SEED_CITIES = [
-  { id: 'c1', name: 'Paris', country: 'France', cost_index: 3, popularity: 98, image_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c2', name: 'Tokyo', country: 'Japan', cost_index: 3, popularity: 96, image_url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', region: 'Asia' },
-  { id: 'c3', name: 'Rome', country: 'Italy', cost_index: 2, popularity: 94, image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c4', name: 'Barcelona', country: 'Spain', cost_index: 2, popularity: 92, image_url: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c5', name: 'Kyoto', country: 'Japan', cost_index: 2, popularity: 90, image_url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80', region: 'Asia' },
-  { id: 'c6', name: 'New York', country: 'United States', cost_index: 3, popularity: 97, image_url: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80', region: 'Americas' },
-  { id: 'c7', name: 'Bali', country: 'Indonesia', cost_index: 1, popularity: 89, image_url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80', region: 'Asia' },
-  { id: 'c8', name: 'London', country: 'United Kingdom', cost_index: 3, popularity: 95, image_url: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c9', name: 'Sydney', country: 'Australia', cost_index: 3, popularity: 88, image_url: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80', region: 'Oceania' },
-  { id: 'c10', name: 'Cairo', country: 'Egypt', cost_index: 1, popularity: 86, image_url: 'https://images.unsplash.com/photo-1572252821143-035a0049f7e5?auto=format&fit=crop&w=800&q=80', region: 'Africa' },
-  { id: 'c11', name: 'Dubrovnik', country: 'Croatia', cost_index: 2, popularity: 87, image_url: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c12', name: 'Cape Town', country: 'South Africa', cost_index: 2, popularity: 85, image_url: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80', region: 'Africa' },
-  { id: 'c13', name: 'Rio de Janeiro', country: 'Brazil', cost_index: 2, popularity: 84, image_url: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80', region: 'Americas' },
-  { id: 'c14', name: 'Istanbul', country: 'Turkey', cost_index: 1, popularity: 91, image_url: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80', region: 'Europe' },
-  { id: 'c15', name: 'Reykjavik', country: 'Iceland', cost_index: 3, popularity: 83, image_url: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=80', region: 'Europe' }
+  { id: 'c1', name: 'Paris', country: 'France', cost_index: 3, popularity: 98, image_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 48.8566, lng: 2.3522 },
+  { id: 'c2', name: 'Tokyo', country: 'Japan', cost_index: 3, popularity: 96, image_url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', region: 'Asia', lat: 35.6762, lng: 139.6503 },
+  { id: 'c3', name: 'Rome', country: 'Italy', cost_index: 2, popularity: 94, image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 41.9028, lng: 12.4964 },
+  { id: 'c4', name: 'Barcelona', country: 'Spain', cost_index: 2, popularity: 92, image_url: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 41.3851, lng: 2.1734 },
+  { id: 'c5', name: 'Kyoto', country: 'Japan', cost_index: 2, popularity: 90, image_url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80', region: 'Asia', lat: 35.0116, lng: 135.7681 },
+  { id: 'c6', name: 'New York', country: 'United States', cost_index: 3, popularity: 97, image_url: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80', region: 'Americas', lat: 40.7128, lng: -74.0060 },
+  { id: 'c7', name: 'Bali', country: 'Indonesia', cost_index: 1, popularity: 89, image_url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80', region: 'Asia', lat: -8.4095, lng: 115.1889 },
+  { id: 'c8', name: 'London', country: 'United Kingdom', cost_index: 3, popularity: 95, image_url: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 51.5074, lng: -0.1278 },
+  { id: 'c9', name: 'Sydney', country: 'Australia', cost_index: 3, popularity: 88, image_url: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80', region: 'Oceania', lat: -33.8688, lng: 151.2093 },
+  { id: 'c10', name: 'Cairo', country: 'Egypt', cost_index: 1, popularity: 86, image_url: 'https://images.unsplash.com/photo-1572252821143-035a0049f7e5?auto=format&fit=crop&w=800&q=80', region: 'Africa', lat: 30.0444, lng: 31.2357 },
+  { id: 'c11', name: 'Dubrovnik', country: 'Croatia', cost_index: 2, popularity: 87, image_url: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 42.6507, lng: 18.0944 },
+  { id: 'c12', name: 'Cape Town', country: 'South Africa', cost_index: 2, popularity: 85, image_url: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80', region: 'Africa', lat: -33.9249, lng: 18.4241 },
+  { id: 'c13', name: 'Rio de Janeiro', country: 'Brazil', cost_index: 2, popularity: 84, image_url: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80', region: 'Americas', lat: -22.9068, lng: -43.1729 },
+  { id: 'c14', name: 'Istanbul', country: 'Turkey', cost_index: 1, popularity: 91, image_url: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 41.0082, lng: 28.9784 },
+  { id: 'c15', name: 'Reykjavik', country: 'Iceland', cost_index: 3, popularity: 83, image_url: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=80', region: 'Europe', lat: 64.1466, lng: -21.9426 }
 ]
 
 export const SEED_ACTIVITIES = [
