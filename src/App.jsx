@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import BottomNav from './components/BottomNav'
 import TopBar from './components/TopBar'
+import TravelAssistant from './components/TravelAssistant'
 
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -88,6 +89,9 @@ function AppLayout() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
+
+      {/* Floating AI Travel Assistant (renders on trip pages) */}
+      <TravelAssistant />
 
       {/* Fixed Bottom Tab Bar on Mobile */}
       {!isPublicShare && <BottomNav />}

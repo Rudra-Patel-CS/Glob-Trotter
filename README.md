@@ -1,16 +1,57 @@
-# React + Vite
+# GlobeTrotter — Smart Multi-City Travel Planner
 
-This template provides a setup to get React working in Vite with HMR and some Oxlint rules.
+GlobeTrotter is a personalized multi-city travel planning platform built with **React**, **Vite**, **Tailwind CSS**, **Supabase**, and **Google Gemini AI**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Core Features
 
-## React Compiler
+1. **Authentication & User Management**: Login, Sign-up, Profile editing, and Saved Destinations.
+2. **Multi-City Itinerary Builder**: Reorder city stops, add activities, and track live running totals.
+3. **Budget Engine & Recharts Analytics**: Category Donut Chart, Daily Spend Bar Chart, overbudget alerts, and line-item management.
+4. **Interactive Leaflet Map View**: Interactive OpenStreetMap visualization plotting city stop markers and connecting route polylines.
+5. **Route Optimization**: Distance calculator (Haversine formula) comparing current stop order vs. nearest-neighbor sequence.
+6. **Weather-Aware Suggestions**: Open-Meteo weather forecasts integrated per day cell with rain warnings for outdoor activities.
+7. **Public Sharing & Cloning**: Shared trip URLs with one-click "Copy This Trip to My Account" functionality.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## ✨ Phase 2 AI Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- **AI Trip Generator (`/trips/ai-generate`)**: Generates custom day-by-day JSON itineraries powered by `@google/generative-ai` (Gemini) based on selected destinations, budget, duration, and travel style.
+- **AI Budget Optimizer (`/trips/budget`)**: Analyzes trip expenses and produces actionable cost-saving recommendations with one-click discounts.
+- **AI Travel Assistant (Floating Chat)**: Trip-aware chatbot available on itinerary pages.
+- **Travel Personality Quiz**: Custom interest tag quiz integrated into the trip creation wizard.
+- **Toast Action Feedback**: Real-time notifications for all mutations via `react-hot-toast`.
+
+---
+
+## 🚀 Environment Setup
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Add your **Google Gemini API Key**:
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+3. (Optional) Set your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+---
+
+## 💻 Running Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Build for production:
+```bash
+npm run build
+```
