@@ -8,8 +8,12 @@ export default function NewTripWizard() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState(1) // 1 | 2 | 3
+  const [step, setStep] = useState(0) // 0 | 1 | 2 | 3
   const [loading, setLoading] = useState(false)
+
+  // Step 0 Form state (Travel Personality Quiz)
+  const [interests, setInterests] = useState(['Culture', 'Food'])
+  const interestOptions = ['Adventure', 'Relaxation', 'Culture', 'Food', 'Nature', 'Nightlife', 'Shopping']
 
   // Step 1 Form state
   const [name, setName] = useState('')
@@ -93,10 +97,7 @@ export default function NewTripWizard() {
       navigate(`/trips/${tripId}/builder`)
     } catch (err) {
       console.error('Error creating trip:', err)
-<<<<<<< HEAD
-=======
       toast.success('Trip created successfully!')
->>>>>>> a7ed858 (Edit the UI)
       navigate('/trips')
     } finally {
       setLoading(false)
@@ -123,6 +124,7 @@ export default function NewTripWizard() {
       {/* Stepper Header */}
       <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex items-center justify-between">
         {[
+          { num: 0, title: 'Style Quiz', desc: 'Travel Interests' },
           { num: 1, title: 'Trip Info', desc: 'Basic details & dates' },
           { num: 2, title: 'Add Stops', desc: 'Cities & duration' },
           { num: 3, title: 'Review', desc: 'Confirm & build' }
@@ -147,13 +149,70 @@ export default function NewTripWizard() {
                 <div className="text-[10px] text-on-surface-variant/70">{s.desc}</div>
               </div>
             </div>
-            {idx < 2 && <div className="flex-1 h-[2px] bg-outline-variant/30 mx-4 hidden md:block" />}
+            {idx < 3 && <div className="flex-1 h-[2px] bg-outline-variant/30 mx-4 hidden md:block" />}
           </div>
         ))}
       </div>
 
       {/* Step Content */}
       <div className="bg-surface-container-lowest p-6 sm:p-8 rounded-2xl border border-outline-variant/30 shadow-sm space-y-6">
+        {step === 0 && (
+          <div className="space-y-6 animate-fade">
+            <div className="border-b border-outline-variant/20 pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="font-display font-bold text-xl text-on-surface">
+                  Step 0: Travel Personality & Interests Quiz
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">Select what inspires your journeys (Optional)</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="text-xs font-semibold text-on-surface-variant hover:text-primary underline"
+              >
+                Skip Quiz →
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-on-surface">Select your preferred travel vibes:</label>
+              <div className="flex flex-wrap gap-2.5">
+                {interestOptions.map(interest => {
+                  const active = interests.includes(interest)
+                  return (
+                    <button
+                      key={interest}
+                      type="button"
+                      onClick={() => {
+                        if (active) setInterests(interests.filter(i => i !== interest))
+                        else setInterests([...interests, interest])
+                      }}
+                      className={`px-4 py-2.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 ${
+                        active
+                          ? 'bg-coral text-white shadow-xs font-bold'
+                          : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
+                    >
+                      <span>{active ? '✓' : '+'}</span>
+                      <span>{interest}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-outline-variant/20">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-6 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center gap-2"
+              >
+                <span>Save Personality & Continue</span>
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        )}
         {step === 1 && (
           <div className="space-y-6 animate-fade">
             <h3 className="font-display font-bold text-xl text-on-surface border-b border-outline-variant/20 pb-3">

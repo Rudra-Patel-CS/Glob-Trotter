@@ -34,13 +34,6 @@ export default function MyTrips() {
     loadTripsData()
   }, [])
 
-<<<<<<< HEAD
-  const confirmDeleteTrip = async () => {
-    if (!tripToDelete) return
-    await supabase.from('trips').delete().eq('id', tripToDelete.id)
-    setTrips(trips.filter(t => t.id !== tripToDelete.id))
-    setTripToDelete(null)
-=======
   const handleDeleteTrip = async (e, tripId) => {
     e.stopPropagation()
     if (confirm('Are you sure you want to delete this trip itinerary?')) {
@@ -48,7 +41,6 @@ export default function MyTrips() {
       setTrips(trips.filter(t => t.id !== tripId))
       toast.success('Trip deleted successfully')
     }
->>>>>>> a7ed858 (Edit the UI)
   }
 
   // Helper to determine status

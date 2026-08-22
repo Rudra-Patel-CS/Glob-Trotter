@@ -47,20 +47,11 @@ export default function Discover() {
     e.stopPropagation()
     if (savedCityIds.includes(cityId)) {
       setSavedCityIds(savedCityIds.filter(id => id !== cityId))
-      await supabase.from('saved_destinations').delete().eq('city_id', cityId)
-<<<<<<< HEAD
-      setToastMsg('Destination removed from saved list')
-    } else {
-      setSavedCityIds([...savedCityIds, cityId])
-      await supabase.from('saved_destinations').insert([{ user_id: user?.id || 'u1', city_id: cityId }])
-      setToastMsg('Destination saved to your favorites!')
-=======
       toast.success('City removed from saved destinations')
     } else {
       setSavedCityIds([...savedCityIds, cityId])
       await supabase.from('saved_destinations').insert([{ user_id: user?.id || 'u1', city_id: cityId }])
       toast.success('City saved to your profile!')
->>>>>>> a7ed858 (Edit the UI)
     }
     setTimeout(() => setToastMsg(''), 3000)
   }

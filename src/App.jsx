@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MyTrips from './pages/MyTrips'
 import NewTripWizard from './pages/NewTripWizard'
+import AiTripGenerator from './pages/AiTripGenerator'
 import ItineraryBuilder from './pages/ItineraryBuilder'
 import ItineraryView from './pages/ItineraryView'
 import Discover from './pages/Discover'
@@ -75,6 +76,7 @@ function AppLayout() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
           <Route path="/trips/new" element={<ProtectedRoute><NewTripWizard /></ProtectedRoute>} />
+          <Route path="/trips/ai-generate" element={<ProtectedRoute><AiTripGenerator /></ProtectedRoute>} />
           <Route path="/trips/:id/builder" element={<ProtectedRoute><ItineraryBuilder /></ProtectedRoute>} />
           <Route path="/trips/:id" element={<ProtectedRoute><ItineraryView /></ProtectedRoute>} />
           <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
