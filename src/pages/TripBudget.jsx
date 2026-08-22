@@ -17,6 +17,9 @@ export default function TripBudget() {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
 
+  const [stops, setStops] = useState([])
+  const [stopActivities, setStopActivities] = useState([])
+
   useEffect(() => {
     async function loadBudget() {
       setLoading(true)
@@ -26,6 +29,19 @@ export default function TripBudget() {
 
         const { data: expData } = await supabase.from('expenses').select('*').eq('trip_id', id)
         setExpenses(expData && expData.length ? expData : SEED_EXPENSES.filter(e => e.trip_id === id))
+
+        const { data: stopData } = await supabase.from('stops').select('*').eq('trip_id', id)
+        const currentStops = stopData && stopData.length ? stopData : [
+          { id: 's1', trip_id: id, city_id: 'c1', start_date: '2026-09-01', end_date: '2026-09-05' },
+          { id: 's2', trip_id: id, city_id: 'c3', start_date: '2026-09-06', end_date: '2026-09-10' }
+        ]
+        setStops(currentStops)
+
+        const stopIds = currentStops.map(s => s.id)
+        const { data: saData } = await supabase.from('stop_activities').select('*')
+        if (saData) {
+          setStopActivities(saData.filter(sa => stopIds.includes(sa.stop_id)))
+        }
       } catch (err) {
         console.error('Error loading budget:', err)
       } finally {
@@ -57,13 +73,15 @@ export default function TripBudget() {
     setExpenses(expenses.filter(e => e.id !== expId))
   }
 
-  // Calculations
-  const totalCost = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
+  // Combine line-item expenses & stop activities for total cost calculation
+  const totalLineExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
+  const totalActivityExpenses = stopActivities.reduce((sum, sa) => sum + Number(sa.cost_override || 0), 0)
+  const totalCost = totalLineExpenses + totalActivityExpenses
   const daysCount = 14
   const avgCostPerDay = Math.round(totalCost / daysCount)
   const isOverbudget = totalCost > budgetLimit
 
-  // Donut chart category data
+  // Donut chart category data combining line expenses + activity expenses
   const CATEGORY_COLORS = {
     stay: '#0f766e',
     transport: '#fe7488',
@@ -76,6 +94,9 @@ export default function TripBudget() {
     acc[e.category] = (acc[e.category] || 0) + Number(e.amount)
     return acc
   }, {})
+  if (totalActivityExpenses > 0) {
+    categoryTotals['activity'] = (categoryTotals['activity'] || 0) + totalActivityExpenses
+  }
 
   const donutData = Object.keys(categoryTotals).map(cat => ({
     name: cat.toUpperCase(),
@@ -83,16 +104,22 @@ export default function TripBudget() {
     color: CATEGORY_COLORS[cat] || '#0f766e'
   }))
 
-  // Bar chart daily spend mock data
-  const barData = [
-    { day: 'Day 1', spend: 220 },
-    { day: 'Day 2', spend: 180 },
-    { day: 'Day 3', spend: 260 },
-    { day: 'Day 4', spend: 140 },
-    { day: 'Day 5', spend: 310 },
-    { day: 'Day 6', spend: 190 },
-    { day: 'Day 7', spend: 240 }
-  ]
+  // Dynamic Bar Chart: Compute daily spending aggregated from stop_activities scheduled_date & general expenses
+  const dailyMap = {}
+  stopActivities.forEach(sa => {
+    const dateKey = sa.scheduled_date || '2026-09-02'
+    dailyMap[dateKey] = (dailyMap[dateKey] || 0) + Number(sa.cost_override || 0)
+  })
+
+  // Distribute general line expenses evenly across active days
+  const activeDates = Object.keys(dailyMap).length ? Object.keys(dailyMap).sort() : ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05', '2026-09-06', '2026-09-07']
+  const baseLinePerDay = Math.round(totalLineExpenses / Math.max(activeDates.length, 1))
+
+  const barData = activeDates.map((dateStr, idx) => ({
+    day: `Day ${idx + 1}`,
+    date: dateStr,
+    spend: (dailyMap[dateStr] || 0) + baseLinePerDay
+  }))
 
   return (
     <div className="max-w-[1280px] mx-auto space-y-8 animate-fade">

@@ -12,6 +12,7 @@ export default function NewTripWizard() {
 
   // Step 1 Form state
   const [name, setName] = useState('')
+  const [nameError, setNameError] = useState('')
   const [startDate, setStartDate] = useState('2026-09-01')
   const [endDate, setEndDate] = useState('2026-09-14')
   const [description, setDescription] = useState('')
@@ -90,7 +91,6 @@ export default function NewTripWizard() {
       navigate(`/trips/${tripId}/builder`)
     } catch (err) {
       console.error('Error creating trip:', err)
-      alert('Trip created successfully!')
       navigate('/trips')
     } finally {
       setLoading(false)
@@ -154,6 +154,13 @@ export default function NewTripWizard() {
               Step 1: Basic Trip Information
             </h3>
 
+            {nameError && (
+              <div className="p-3 bg-error-container text-on-error-container text-xs rounded-xl flex items-center gap-2 font-medium">
+                <span className="material-symbols-outlined text-base text-error">error</span>
+                <span>{nameError}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-on-surface mb-1.5">Trip Name *</label>
@@ -161,7 +168,7 @@ export default function NewTripWizard() {
                   type="text"
                   required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setNameError(''); }}
                   placeholder="e.g., Grand European Summer Tour"
                   className="w-full px-4 py-2.5 text-sm bg-surface border border-outline-variant/60 rounded-lg focus:outline-none focus:border-primary text-on-surface"
                 />
@@ -259,14 +266,14 @@ export default function NewTripWizard() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-outline-variant/20">
+            <div className="flex flex-col sm:flex-row justify-end pt-4 border-t border-outline-variant/20 gap-3">
               <button
                 type="button"
                 onClick={() => {
-                  if (!name) return alert('Please enter a trip name.')
+                  if (!name) return setNameError('Please enter a trip name before continuing.')
                   setStep(2)
                 }}
-                className="bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-6 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center gap-2"
+                className="w-full sm:w-auto bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-6 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center justify-center gap-2"
               >
                 <span>Continue to Add Stops</span>
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -335,18 +342,18 @@ export default function NewTripWizard() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-outline-variant/20">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between pt-4 border-t border-outline-variant/20 gap-3">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-5 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+                className="px-5 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors text-center"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-6 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center gap-2"
+                className="w-full sm:w-auto bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-6 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center justify-center gap-2"
               >
                 <span>Review Itinerary</span>
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -389,11 +396,11 @@ export default function NewTripWizard() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-outline-variant/20">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between pt-4 border-t border-outline-variant/20 gap-3">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="px-5 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+                className="px-5 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors text-center"
               >
                 Back
               </button>
@@ -401,7 +408,7 @@ export default function NewTripWizard() {
                 type="button"
                 onClick={handleCreateTrip}
                 disabled={loading}
-                className="bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-8 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center gap-2"
+                className="w-full sm:w-auto bg-coral hover:bg-coral-hover text-white font-semibold text-xs px-8 py-3 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <span className="material-symbols-outlined animate-spin">progress_activity</span>

@@ -12,6 +12,7 @@ export default function Login() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
   const { signIn, signUp } = useAuth()
@@ -37,6 +38,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorMsg('')
+    setSuccessMsg('')
     setLoading(true)
 
     try {
@@ -99,7 +101,7 @@ export default function Login() {
           <div className="flex relative bg-surface-container rounded-xl p-1 mb-6">
             <button
               type="button"
-              onClick={() => { setActiveTab('login'); setErrorMsg('') }}
+              onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg('') }}
               className={`w-1/2 py-2.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'login'
                   ? 'bg-surface-container-lowest text-primary shadow-sm font-bold'
@@ -110,7 +112,7 @@ export default function Login() {
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('signup'); setErrorMsg('') }}
+              onClick={() => { setActiveTab('signup'); setErrorMsg(''); setSuccessMsg('') }}
               className={`w-1/2 py-2.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'signup'
                   ? 'bg-surface-container-lowest text-primary shadow-sm font-bold'
@@ -126,6 +128,14 @@ export default function Login() {
             <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-xl flex items-center gap-2 font-medium">
               <span className="material-symbols-outlined text-base text-error">error</span>
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Success Banner */}
+          {successMsg && (
+            <div className="mb-4 p-3 bg-primary-container/20 text-primary text-xs rounded-xl flex items-center gap-2 font-semibold border border-primary-container/30">
+              <span className="material-symbols-outlined text-base">check_circle</span>
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -231,7 +241,7 @@ export default function Login() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => alert('Password reset link sent to your email!')}
+                  onClick={() => setSuccessMsg('Password reset instructions sent to your email!')}
                   className="text-xs font-semibold text-primary hover:underline"
                 >
                   Forgot password?
@@ -247,7 +257,7 @@ export default function Login() {
                     className="w-4 h-4 rounded text-primary focus:ring-primary border-outline-variant mt-0.5"
                   />
                   <span className="text-xs text-on-surface-variant leading-tight">
-                    I agree to GlobeTrotter's <a href="#" className="text-primary underline font-semibold">Terms of Service</a> and <a href="#" className="text-primary underline font-semibold">Privacy Policy</a>.
+                    I agree to GlobeTrotter's <a href="#" onClick={(e) => { e.preventDefault(); setSuccessMsg('Terms & Privacy Policy apply to your account.') }} className="text-primary underline font-semibold">Terms of Service</a> and Privacy Policy.
                   </span>
                 </label>
               </div>

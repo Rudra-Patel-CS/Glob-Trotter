@@ -11,6 +11,7 @@ export default function MyTrips() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('all') // 'all' | 'upcoming' | 'past'
   const [sortBy, setSortBy] = useState('date') // 'date' | 'name'
+  const [tripToDelete, setTripToDelete] = useState(null)
 
   const navigate = useNavigate()
 
@@ -32,12 +33,11 @@ export default function MyTrips() {
     loadTripsData()
   }, [])
 
-  const handleDeleteTrip = async (e, tripId) => {
-    e.stopPropagation()
-    if (confirm('Are you sure you want to delete this trip itinerary?')) {
-      await supabase.from('trips').delete().eq('id', tripId)
-      setTrips(trips.filter(t => t.id !== tripId))
-    }
+  const confirmDeleteTrip = async () => {
+    if (!tripToDelete) return
+    await supabase.from('trips').delete().eq('id', tripToDelete.id)
+    setTrips(trips.filter(t => t.id !== tripToDelete.id))
+    setTripToDelete(null)
   }
 
   // Helper to determine status
@@ -76,7 +76,7 @@ export default function MyTrips() {
 
         <Link
           to="/trips/new"
-          className="bg-coral hover:bg-coral-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] hover:-translate-y-0.5 transition-all inline-flex items-center gap-2 self-start sm:self-auto shrink-0"
+          className="bg-coral hover:bg-coral-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-sm hover:shadow-[0_10px_30px_rgba(251,113,133,0.35)] hover:-translate-y-0.5 transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
         >
           <span className="material-symbols-outlined text-lg">add</span>
           <span>Plan New Trip</span>
@@ -86,12 +86,12 @@ export default function MyTrips() {
       {/* Filter, Search & Controls Bar */}
       <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Filter Tabs */}
-        <div className="flex bg-surface-container rounded-xl p-1 w-full md:w-auto">
+        <div className="flex bg-surface-container rounded-xl p-1 w-full md:w-auto overflow-x-auto">
           {['all', 'upcoming', 'past'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 md:flex-none px-5 py-2 text-xs font-semibold rounded-lg capitalize transition-all ${
+              className={`flex-1 md:flex-none px-5 py-2 text-xs font-semibold rounded-lg capitalize transition-all whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-surface-container-lowest text-primary shadow-xs font-bold'
                   : 'text-on-surface-variant hover:text-on-surface'
@@ -115,7 +115,7 @@ export default function MyTrips() {
             <span className="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant text-base">search</span>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
             <span className="text-xs text-on-surface-variant font-medium whitespace-nowrap">Sort by:</span>
             <select
               value={sortBy}
@@ -179,7 +179,7 @@ export default function MyTrips() {
                       <span className="material-symbols-outlined text-lg">edit</span>
                     </button>
                     <button
-                      onClick={(e) => handleDeleteTrip(e, trip.id)}
+                      onClick={(e) => { e.stopPropagation(); setTripToDelete(trip); }}
                       className="bg-white text-error p-2.5 rounded-full shadow-lg hover:scale-110 transition-transform"
                       title="Delete Trip"
                     >
@@ -234,6 +234,37 @@ export default function MyTrips() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {tripToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-background/60 backdrop-blur-xs animate-fade">
+          <div className="bg-surface p-6 rounded-2xl shadow-2xl max-w-sm w-full space-y-4 border border-outline-variant/30 animate-rise">
+            <div className="flex items-center gap-3 text-error">
+              <span className="material-symbols-outlined text-3xl">warning</span>
+              <h3 className="font-display font-bold text-lg text-on-surface">Delete Trip?</h3>
+            </div>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Are you sure you want to delete <strong className="text-on-surface">"{tripToDelete.name}"</strong>? This will permanently remove all associated stops and activities.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setTripToDelete(null)}
+                className="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteTrip}
+                className="px-4 py-2 bg-error hover:bg-red-800 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors"
+              >
+                Delete Trip
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -63,12 +63,12 @@ export default function ItineraryView() {
       </div>
 
       {/* Navigation Quick Actions Bar */}
-      <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         {/* View Mode Toggle */}
-        <div className="flex bg-surface-container rounded-xl p-1">
+        <div className="flex bg-surface-container rounded-xl p-1 w-full md:w-auto">
           <button
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+            className={`flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
               viewMode === 'list' ? 'bg-surface-container-lowest text-primary shadow-xs font-bold' : 'text-on-surface-variant'
             }`}
           >
@@ -77,7 +77,7 @@ export default function ItineraryView() {
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+            className={`flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
               viewMode === 'calendar' ? 'bg-surface-container-lowest text-primary shadow-xs font-bold' : 'text-on-surface-variant'
             }`}
           >
@@ -87,31 +87,31 @@ export default function ItineraryView() {
         </div>
 
         {/* Action Links */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <Link
             to={`/trips/${id}/builder`}
-            className="px-4 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-none px-3.5 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center justify-center gap-1.5 transition-colors"
           >
             <span className="material-symbols-outlined text-base">edit</span>
             <span>Edit Builder</span>
           </Link>
           <Link
             to={`/trips/${id}/budget`}
-            className="px-4 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-none px-3.5 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center justify-center gap-1.5 transition-colors"
           >
             <span className="material-symbols-outlined text-base font-bold text-primary">account_balance_wallet</span>
             <span>Budget</span>
           </Link>
           <Link
             to={`/trips/${id}/calendar`}
-            className="px-4 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-none px-3.5 py-2 bg-surface hover:bg-surface-container border border-outline-variant/40 rounded-lg text-xs font-semibold text-on-surface flex items-center justify-center gap-1.5 transition-colors"
           >
             <span className="material-symbols-outlined text-base">event</span>
             <span>Full Calendar</span>
           </Link>
           <Link
             to={`/share/euro-summer-2026`}
-            className="px-4 py-2 bg-coral hover:bg-coral-hover text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="w-full sm:w-auto px-4 py-2 bg-coral hover:bg-coral-hover text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-all"
           >
             <span className="material-symbols-outlined text-base">share</span>
             <span>Share Link</span>
@@ -177,19 +177,57 @@ export default function ItineraryView() {
           })}
         </div>
       ) : (
-        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm">
-          <h3 className="font-display font-bold text-lg text-on-surface mb-4">Calendar Schedule</h3>
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-on-surface-variant mb-2">
-            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+            <div>
+              <h3 className="font-display font-bold text-lg text-on-surface">Dynamic Itinerary Calendar</h3>
+              <p className="text-xs text-on-surface-variant">Scheduled stops and activities mapped to actual trip dates</p>
+            </div>
+            <span className="text-xs font-semibold text-primary bg-primary-container/10 px-3 py-1 rounded-full">
+              {trip?.start_date} → {trip?.end_date}
+            </span>
           </div>
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 31 }).map((_, d) => (
-              <div key={d} className="min-h-[70px] p-1.5 bg-surface border border-outline-variant/20 rounded-lg text-left text-xs font-semibold">
-                <span className="text-on-surface-variant text-[10px]">{d + 1}</span>
-                {d === 1 && <div className="mt-1 p-1 bg-primary-container/20 text-primary rounded text-[10px] truncate">Eiffel Tower</div>}
-                {d === 6 && <div className="mt-1 p-1 bg-coral/20 text-coral font-bold rounded text-[10px] truncate">Colosseum</div>}
-              </div>
-            ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stops.map((stop, idx) => {
+              const city = SEED_CITIES.find(c => c.id === stop.city_id)
+              const currentSA = stopActivities.filter(sa => sa.stop_id === stop.id)
+
+              return (
+                <div key={stop.id} className="p-4 bg-surface rounded-xl border border-outline-variant/30 space-y-3">
+                  <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary-container text-on-primary font-bold text-xs flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <h4 className="font-bold text-sm text-on-surface">{city?.name}, {city?.country}</h4>
+                    </div>
+                    <span className="text-[10px] font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
+                      {stop.start_date}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {currentSA.map(sa => {
+                      const act = SEED_ACTIVITIES.find(a => a.id === sa.activity_id)
+                      return (
+                        <div key={sa.id} className="p-2 bg-surface-container-lowest rounded-lg border border-outline-variant/20 flex items-center justify-between text-xs">
+                          <div className="truncate">
+                            <span className="font-semibold text-on-surface truncate block">{act?.name}</span>
+                            <span className="text-[10px] text-on-surface-variant">{sa.scheduled_date} • {sa.scheduled_time || '10:00'}</span>
+                          </div>
+                          <span className="font-bold text-primary text-xs shrink-0 ml-2">${sa.cost_override || act?.cost || 0}</span>
+                        </div>
+                      )
+                    })}
+
+                    {currentSA.length === 0 && (
+                      <p className="text-xs text-on-surface-variant italic py-2">No activities scheduled yet.</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

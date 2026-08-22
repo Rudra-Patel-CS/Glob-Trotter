@@ -18,13 +18,23 @@ export default function Discover() {
 
   const [savedCityIds, setSavedCityIds] = useState(['c2', 'c4'])
   const [userTrips, setUserTrips] = useState([])
+  const [stops, setStops] = useState([])
   const [selectedCityForTrip, setSelectedCityForTrip] = useState(null)
   const [showTripPicker, setShowTripPicker] = useState(false)
+
+  // Activity Picker state
+  const [selectedActivityForTrip, setSelectedActivityForTrip] = useState(null)
+  const [showActivityPicker, setShowActivityPicker] = useState(false)
+  const [selectedTripIdForActivity, setSelectedTripIdForActivity] = useState(null)
+  const [toastMsg, setToastMsg] = useState('')
 
   useEffect(() => {
     async function loadDiscoverData() {
       const { data: tripData } = await supabase.from('trips').select('*')
       if (tripData) setUserTrips(tripData)
+
+      const { data: stopData } = await supabase.from('stops').select('*')
+      if (stopData) setStops(stopData)
 
       const { data: savedData } = await supabase.from('saved_destinations').select('city_id')
       if (savedData) setSavedCityIds(savedData.map(s => s.city_id))
@@ -37,10 +47,13 @@ export default function Discover() {
     if (savedCityIds.includes(cityId)) {
       setSavedCityIds(savedCityIds.filter(id => id !== cityId))
       await supabase.from('saved_destinations').delete().eq('city_id', cityId)
+      setToastMsg('Destination removed from saved list')
     } else {
       setSavedCityIds([...savedCityIds, cityId])
       await supabase.from('saved_destinations').insert([{ user_id: user?.id || 'u1', city_id: cityId }])
+      setToastMsg('Destination saved to your favorites!')
     }
+    setTimeout(() => setToastMsg(''), 3000)
   }
 
   const handleOpenTripPicker = (e, city) => {
@@ -63,6 +76,29 @@ export default function Discover() {
     navigate(`/trips/${tripId}/builder`)
   }
 
+  const handleOpenActivityPicker = (act) => {
+    setSelectedActivityForTrip(act)
+    setSelectedTripIdForActivity(userTrips[0]?.id || null)
+    setShowActivityPicker(true)
+  }
+
+  const handleAddActivityToStop = async (stopId) => {
+    if (!selectedActivityForTrip) return
+    const targetStop = stops.find(s => s.id === stopId)
+    const newSA = {
+      id: 'sa_' + Date.now(),
+      stop_id: stopId,
+      activity_id: selectedActivityForTrip.id,
+      scheduled_date: targetStop?.start_date || '2026-09-02',
+      scheduled_time: '10:00',
+      cost_override: selectedActivityForTrip.cost
+    }
+    await supabase.from('stop_activities').insert([newSA])
+    setShowActivityPicker(false)
+    setToastMsg(`Added "${selectedActivityForTrip.name}" to trip!`)
+    setTimeout(() => setToastMsg(''), 3000)
+  }
+
   // Filtered cities
   const filteredCities = SEED_CITIES.filter(city => {
     const matchesQuery = city.name.toLowerCase().includes(query.toLowerCase()) || city.country.toLowerCase().includes(query.toLowerCase())
@@ -79,7 +115,15 @@ export default function Discover() {
   })
 
   return (
-    <div className="max-w-[1280px] mx-auto space-y-8 animate-fade">
+    <div className="max-w-[1280px] mx-auto space-y-8 animate-fade relative">
+      {/* Toast Notification Banner */}
+      {toastMsg && (
+        <div className="fixed top-20 right-6 z-50 bg-primary text-white font-semibold text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-rise">
+          <span className="material-symbols-outlined text-base">check_circle</span>
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="font-display font-bold text-3xl text-on-surface tracking-tight">Discover Destination & Activities</h1>
@@ -229,10 +273,11 @@ export default function Discover() {
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-xs font-bold text-primary">${act.cost} USD</span>
                   <button
-                    onClick={() => alert(`Added "${act.name}" to your current active trip itinerary!`)}
-                    className="bg-coral text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-coral-hover transition-colors"
+                    onClick={() => handleOpenActivityPicker(act)}
+                    className="bg-coral text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-coral-hover transition-colors flex items-center gap-1"
                   >
-                    + Add Activity
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    <span>Add Activity</span>
                   </button>
                 </div>
               </div>
@@ -241,7 +286,7 @@ export default function Discover() {
         </div>
       )}
 
-      {/* Trip Picker Modal */}
+      {/* Trip Picker Modal for Cities */}
       {showTripPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-background/60 backdrop-blur-xs animate-fade">
           <div className="bg-surface p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4 border border-outline-variant/30 animate-rise">
@@ -268,6 +313,71 @@ export default function Discover() {
                   <span className="material-symbols-outlined text-primary text-base">add_circle</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Trip & Stop Picker Modal */}
+      {showActivityPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-background/60 backdrop-blur-xs animate-fade">
+          <div className="bg-surface p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4 border border-outline-variant/30 animate-rise">
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+              <div>
+                <h3 className="font-display font-bold text-lg text-on-surface">Add Activity to Itinerary</h3>
+                <p className="text-xs text-on-surface-variant font-medium">{selectedActivityForTrip?.name}</p>
+              </div>
+              <button onClick={() => setShowActivityPicker(false)} className="text-on-surface-variant hover:text-on-surface">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {/* Select Trip */}
+            <div>
+              <label className="block text-xs font-semibold text-on-surface mb-1">Select Target Trip</label>
+              <select
+                value={selectedTripIdForActivity || ''}
+                onChange={(e) => setSelectedTripIdForActivity(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-surface-container-lowest border border-outline-variant/60 rounded-lg text-on-surface"
+              >
+                {userTrips.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Select Stop in Trip */}
+            <div>
+              <label className="block text-xs font-semibold text-on-surface mb-1">Select City Stop</label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {stops.filter(s => s.trip_id === selectedTripIdForActivity).map((stop, idx) => {
+                  const city = SEED_CITIES.find(c => c.id === stop.city_id)
+                  return (
+                    <div
+                      key={stop.id}
+                      onClick={() => handleAddActivityToStop(stop.id)}
+                      className="p-3 bg-surface-container-lowest hover:bg-primary-container/10 border border-outline-variant/30 rounded-xl cursor-pointer flex items-center justify-between transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-full bg-primary-container text-on-primary font-bold text-xs flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <div className="font-bold text-xs text-on-surface">{city?.name || 'City Stop'}</div>
+                          <div className="text-[10px] text-on-surface-variant">{stop.start_date} → {stop.end_date}</div>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-coral text-base">add_circle</span>
+                    </div>
+                  )
+                })}
+
+                {stops.filter(s => s.trip_id === selectedTripIdForActivity).length === 0 && (
+                  <p className="text-xs text-on-surface-variant italic p-3 text-center border border-dashed rounded-lg">
+                    No stops in this trip yet.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
