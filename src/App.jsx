@@ -1,122 +1,98 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
 
-function App() {
-  const [count, setCount] = useState(0)
+import Sidebar from './components/Sidebar'
+import BottomNav from './components/BottomNav'
+import TopBar from './components/TopBar'
+
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import MyTrips from './pages/MyTrips'
+import NewTripWizard from './pages/NewTripWizard'
+import ItineraryBuilder from './pages/ItineraryBuilder'
+import ItineraryView from './pages/ItineraryView'
+import Discover from './pages/Discover'
+import TripBudget from './pages/TripBudget'
+import TripCalendar from './pages/TripCalendar'
+import PublicShare from './pages/PublicShare'
+import Profile from './pages/Profile'
+import Admin from './pages/Admin'
+
+// Guard for protected routes
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-3">
+          <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+          <span className="text-xs font-semibold text-on-surface-variant">Loading GlobeTrotter...</span>
+        </div>
+      </div>
+    )
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
+// Layout wrapper for authenticated screens
+function AppLayout() {
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
+  const isPublicShare = location.pathname.startsWith('/share/')
+
+  if (isLoginPage) {
+    return (
+      <div className="min-h-screen bg-surface">
+        <TopBar />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-background text-on-background flex">
+      {/* Fixed Left Sidebar on Desktop */}
+      {!isPublicShare && <Sidebar />}
 
-      <div className="ticks"></div>
+      {/* Top Header Bar */}
+      <TopBar />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* Main Content Viewport */}
+      <main className={`flex-1 ${isPublicShare ? 'w-full' : 'md:ml-[260px]'} pt-20 pb-24 md:pb-8 px-4 sm:px-6 min-h-screen overflow-x-hidden`}>
+        <Routes>
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
+          <Route path="/trips/new" element={<ProtectedRoute><NewTripWizard /></ProtectedRoute>} />
+          <Route path="/trips/:id/builder" element={<ProtectedRoute><ItineraryBuilder /></ProtectedRoute>} />
+          <Route path="/trips/:id" element={<ProtectedRoute><ItineraryView /></ProtectedRoute>} />
+          <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+          <Route path="/trips/:id/budget" element={<ProtectedRoute><TripBudget /></ProtectedRoute>} />
+          <Route path="/trips/:id/calendar" element={<ProtectedRoute><TripCalendar /></ProtectedRoute>} />
+          <Route path="/share/:token" element={<PublicShare />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {/* Fixed Bottom Tab Bar on Mobile */}
+      {!isPublicShare && <BottomNav />}
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </AuthProvider>
+  )
+}

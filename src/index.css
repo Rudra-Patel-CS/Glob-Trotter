@@ -1,111 +1,291 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import 'tailwindcss';
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* ==========================================================================
+   GlobeTrotter design system
+   Tokens are a 1:1 port of stitch_personalized_creation_prototype/globetrotter/DESIGN.md
+   Brand: Deep Teal (stability / depth of exploration) + Warm Coral (CTA energy)
+   ========================================================================== */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+@theme {
+  /* ---- Palette: surfaces (tonal layers) ---- */
+  --color-surface: #f9f9ff;
+  --color-surface-dim: #d3daea;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f0f3ff;
+  --color-surface-container: #e7eefe;
+  --color-surface-container-high: #e2e8f8;
+  --color-surface-container-highest: #dce2f3;
+  --color-surface-variant: #dce2f3;
+  --color-surface-tint: #006a63;
+  --color-surface-gray: #f3f4f6;
+  --color-off-white: #f9fafb;
+
+  --color-background: #f9f9ff;
+  --color-on-background: #151c27;
+  --color-on-surface: #151c27;
+  --color-on-surface-variant: #3e4947;
+  --color-inverse-surface: #2a313d;
+  --color-inverse-on-surface: #ebf1ff;
+
+  --color-outline: #6e7977;
+  --color-outline-variant: #bdc9c6;
+
+  /* ---- Palette: primary (Deep Teal) ---- */
+  --color-primary: #005c55;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #0f766e;
+  --color-on-primary-container: #a3faef;
+  --color-inverse-primary: #80d5cb;
+  --color-primary-fixed: #9cf2e8;
+  --color-primary-fixed-dim: #80d5cb;
+  --color-on-primary-fixed: #00201d;
+  --color-on-primary-fixed-variant: #00504a;
+  --color-deep-teal-dark: #0d5e58;
+
+  /* ---- Palette: secondary (Warm Coral) ---- */
+  --color-secondary: #a93349;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fe7488;
+  --color-on-secondary-container: #730425;
+  --color-secondary-fixed: #ffdadc;
+  --color-secondary-fixed-dim: #ffb2b9;
+  --color-on-secondary-fixed: #400010;
+  --color-on-secondary-fixed-variant: #891933;
+  /* The literal CTA coral used across every Stitch screen. */
+  --color-coral: #fb7185;
+  --color-coral-hover: #f43f5e;
+
+  /* ---- Palette: tertiary (value / cost-index yellow) ---- */
+  --color-tertiary: #6e5e0d;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #bfab56;
+  --color-on-tertiary-container: #4b3f00;
+  --color-tertiary-fixed: #f9e287;
+  --color-tertiary-fixed-dim: #dcc66e;
+  --color-on-tertiary-fixed: #221b00;
+  --color-on-tertiary-fixed-variant: #534600;
+
+  /* ---- Palette: error ---- */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* ---- Typography families ---- */
+  --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* ---- Type scale ----
+     Weight is deliberately NOT baked into these tokens so that font-bold /
+     font-semibold utilities stay authoritative wherever they're applied. */
+  --text-headline-xl: 40px;
+  --text-headline-xl--line-height: 48px;
+  --text-headline-xl--letter-spacing: -0.02em;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.01em;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.01em;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 14px;
+
+  /* ---- Spacing (8px base scale) ---- */
+  --spacing-gutter: 16px;
+  --spacing-container-margin: 24px;
+  --spacing-sidebar: 260px;
+
+  /* ---- Container widths ---- */
+  --container-content: 1280px;
+
+  /* ---- Elevation: ambient shadows carry a subtle teal tint so depth stays
+     inside the brand's colour harmony (DESIGN.md § Elevation & Depth) ---- */
+  --shadow-ambient: 0 4px 20px rgba(15, 118, 110, 0.06);
+  --shadow-elevated: 0 10px 30px rgba(15, 118, 110, 0.12);
+  --shadow-coral: 0 10px 30px rgba(251, 113, 133, 0.35);
+  --shadow-inset-top: 0 -4px 20px rgba(15, 118, 110, 0.06);
+
+  /* ---- Motion ---- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md);
+    line-height: var(--text-body-md--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    margin: 0;
+  }
+
+  /* Keyboard focus is always visible; pointer focus is not. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-container);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-fixed);
+    color: var(--color-on-primary-fixed);
+  }
+
+  /* Native date pickers get a teal indicator instead of the default black. */
+  input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    filter: invert(28%) sepia(37%) saturate(1543%) hue-rotate(140deg);
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Material Symbols — the icon set every Stitch screen was generated against. */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+.material-symbols-outlined.is-filled {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+@utility hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* Respects the iOS home-indicator inset on the mobile tab bar. */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-body {
-  margin: 0;
+/* Frosted panel used for the auth card and sticky bars. */
+@utility glass-panel {
+  background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* The Level 1 → Level 2 lift from DESIGN.md, as one class. */
+@utility card-lift {
+  box-shadow: var(--shadow-ambient);
+  transition:
+    box-shadow 300ms var(--ease-out-soft),
+    transform 300ms var(--ease-out-soft);
+  &:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-2px);
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+@utility animate-rise {
+  animation: gt-rise 400ms var(--ease-out-soft) both;
+}
+
+@utility animate-fade {
+  animation: gt-fade 250ms var(--ease-out-soft) both;
+}
+
+@keyframes gt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
-p {
-  margin: 0;
+
+@keyframes gt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
